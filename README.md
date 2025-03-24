@@ -18,9 +18,17 @@
 
 ## 기술 스택
 
+![Static Badge](https://img.shields.io/badge/ansible-ansible?style=for-the-badge&logo=ansible&logoColor=%23EE0000&color=%23000000)
+![Static Badge](https://img.shields.io/badge/k8s-k8s?style=for-the-badge&logo=kubernetes&logoColor=%23326CE5&color=%23ACDCFF)
+
 ### CI
 
+![Static Badge](https://img.shields.io/badge/jenkins-jenkins?style=for-the-badge&logo=jenkins&logoColor=%23D24939&color=%23EEEEEE)
+![Static Badge](https://img.shields.io/badge/circleci-circleci?style=for-the-badge&logo=circleci&logoColor=%23343434&color=%23EEEEEE)
+
 ### CD
+
+![Static Badge](https://img.shields.io/badge/jenkins-jenkins?style=for-the-badge&logo=jenkins&logoColor=%23D24939&color=%23EEEEEE)
 
 ##  👩‍💻 팀원 소개
 <details>
