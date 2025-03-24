@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-blue
+  namespace: kgj
+spec:
+  selector:
+    matchLabels:
+      type: backend
+      deployment: blue
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        type: backend
+        deployment: blue
+    spec:
+      containers:
+        - name: backend
+          image: celarim/atpback:1.0
+          envFrom:
+          - configMapRef:
+              name: back-cm
