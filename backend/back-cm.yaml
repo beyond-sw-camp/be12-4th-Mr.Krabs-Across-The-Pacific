@@ -4,7 +4,7 @@ metadata:
   name: back-cm
 data:
   JWT_SECRET: ''
-  JWT_EXPIRATION: 0
+  JWT_EXPIRATION: '0'
   DB_URL: 'jdbc:mariadb://db-svc:3306/web'
   DB_USER: ''
   DB_PASSWORD: ''
