@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: frontend-helm
+  namespace: hgy
+  labels:
+    type: frontend
+spec:
+  selector:
+    matchLabels:
+      type: frontend
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        type: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: "{{ .Values.frontimage.repository }}:{{ .Values.frontimage.tag }}"
+        ports:
+          - containerPort: {{ .Values.frontendservice.targetPort }}

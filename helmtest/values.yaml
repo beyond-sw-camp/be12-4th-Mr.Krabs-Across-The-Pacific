@@ -1,0 +1,80 @@
+# values.yml
+mongoReplicaCount: 3
+replicaCount: 2
+
+image:
+  pullPolicy: IfNotPresent
+
+mongoimage:
+  repository: mongo
+  tag: latest
+
+backimage:
+  repository: "celarim/atpback"
+  tag: "1.0"
+
+frontimage:
+  repository: "senouis/atp_front"
+  tag: latest
+
+mongoservice:
+  name: mongodb
+  type: ClusterIP
+  port: 27017
+  targetPort: 27017
+
+statefulset:
+  persistence:
+    enabled: true
+    size: 4Gi
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "2Gi"
+      cpu: "1"
+
+deployment:
+  persistence:
+    enabled: true
+    size: 2Gi
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "2Gi"
+      cpu: "1"
+
+mongoauth:
+  enabled: true
+  username: "atpadmin"
+  password: "4JTBTOqa3qWcUPSO"
+  database: americastock
+
+mariadb:
+  tag: latest
+  rootpass: qwer1234
+  username: test
+  password: qwer1234
+  database: atp
+
+dbservice:
+  port: 3306
+  targetPort: 3306
+
+backend:
+  dbUrl: "jdbc:mariadb://db-svc:3306/web"
+  jwtSecret: "dhsaklhfdkjsalhdfklashdfkjlashklsfhafkdjlsahkdfhaskhdfaklhfdkla"
+  jwtExpire: 72000000
+
+backendservice:
+  port: 8080
+  targetPort: 8080
+
+frontend:
+
+frontendservice:
+  port: 80
+  targetPort: 80

@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Release.Name }}-mariadb"
+  namespace: hgy
+  labels:
+    type: database
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      type: db
+  template: 
+    metadata:
+      labels:
+        type: db
+    spec:
+      containers:
+        - name: master-db-container
+          image: mariadb:{{ .Values.mariadb.tag }}
+          namespace: hgy
+          volumeMounts:
+            - name: db-vol
+              mountPath: /var/lib/data/
+          envFrom:
+          - configMapRef:
+              name: db-cm
+          ports:
+          - containerPort: {{ .Values.dbservice.targetPort }}
+      volumes:
+        - name: db-vol
+          persistentVolumeClaim:
+            claimName: back-db-pvc
