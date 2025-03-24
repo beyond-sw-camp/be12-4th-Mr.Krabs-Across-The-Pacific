@@ -2,6 +2,7 @@ apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: mongostore
+  namespace: hgy
 provisioner: driver.longhorn.io
 parameters:
   dataLocality: disabled

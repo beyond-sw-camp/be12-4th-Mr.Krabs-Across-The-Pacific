@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: mongodb
+  namespace: hgy
 spec:
   serviceName: "mongodb"
   replicas: 3
@@ -16,6 +17,7 @@ spec:
     spec:
       initContainers:
         - name: fix-permissions
+          namespace: hgy
           image: busybox
           command: ["sh", "-c", "chown -R 999:999 /data/db"]
           volumeMounts:
@@ -24,6 +26,7 @@ spec:
 
       containers:
         - name: mongodb
+          namespace: hgy
           image: mongo:latest
           command:
             - mongod
@@ -42,6 +45,7 @@ spec:
   volumeClaimTemplates:
     - metadata:
         name: mongo-storage
+        namespace: hgy
       spec:
         accessModes: ["ReadWriteOnce"]
         resources:

@@ -1,0 +1,8 @@
+apiVersion: apps/v1
+kind: ConfigMap
+metadata:
+  name: mongo-cm
+  namespace: hgy
+data:
+  MONGO_INITDB_ROOT_USERNAME: 
+  MONGO_INITDB_ROOT_PASSWORD: 
