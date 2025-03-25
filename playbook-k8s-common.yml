@@ -43,15 +43,19 @@
 
     - name: Download the Kubernetes GPG key
       shell: |
-        curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+        curl -fsSLo /etc/apt/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
       args:
         creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
     - name: Add Kubernetes Repo List
       shell: |
-        echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+        echo "deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
       args:
         creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+        
+    - name: Update apt package list
+      apt:
+        update_cache: yes
 
     - name: Install k8s
       apt:
@@ -83,4 +87,3 @@
         update_cache: yes
         name: open-iscsi
         state: present
-        enabled: yes
