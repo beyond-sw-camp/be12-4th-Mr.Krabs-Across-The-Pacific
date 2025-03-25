@@ -1,0 +1,102 @@
+pipeline {
+    agent any
+
+    environment {
+        GIT_DEPLOYMENT_YAML = 'https://raw.githubusercontent.com/Shin-JiHyun/ATP_jenkins/develop/k8s/frontend-deployment.yaml'
+        GIT_FRONTEND_SERVICE_YAML = 'https://raw.githubusercontent.com/Shin-JiHyun/ATP_jenkins/develop/k8s/frontend-service.yaml'
+        GIT_INGRESS_YAML = 'https://raw.githubusercontent.com/Shin-JiHyun/ATP_jenkins/develop/k8s/frontend-ingress.yaml'
+        CIRCLECI_PROJECT_SLUG = 'circleci/EAQqLFJfLAc1BW9jMD56YP/EC1Xri7nPPziay6JK13SoT'
+        CIRCLECI_DEFINITION_ID = '16f953cf-8f49-41ea-9584-bf50c43338d4'
+        CIRCLECI_TOKEN = credentials('CIRCLECI_TOKEN')
+        NAMESPACE = 'atp'
+    }
+
+    stages {
+
+        stage('Trigger CircleCI Pipeline') {
+            steps {
+                script {
+                    echo "Starting CircleCI Pipeline...."
+
+                    // CircleCI 파이프라인 실행 및 ID 가져오기
+                    def pipeline_id = sh(script: """
+                        curl -X POST 'https://circleci.com/api/v2/project/$CIRCLECI_PROJECT_SLUG/pipeline/run' \
+                        --header 'Circle-Token: $CIRCLECI_TOKEN' \
+                        --header 'Content-Type: application/json' \
+                        --data '{
+                            "definition_id": "$CIRCLECI_DEFINITION_ID",
+                            "config": {
+                                "branch": "develop"
+                            },
+                            "checkout": {
+                                "branch": "develop"
+                            },
+                            "parameters": {
+                                "tag": "$BUILD_ID"
+                            }
+                        }'  | grep -o '"id":"[^"]*"' | awk -F':' '{print \$2}' | tr -d '"'
+                    """, returnStdout: true).trim()
+
+                    echo "Triggered CircleCI Pipeline ID: ${pipeline_id}"
+                    env.PIPELINE_ID = pipeline_id
+                }
+            }
+        }
+        stage('Wait for CircleCI Completion') {
+            steps {
+                script {
+                    echo "Waiting for CircleCI Pipeline to Complete..."
+
+                    def status = "running"
+                    while (status == "running" || status == "pending") {
+                        sleep(10) // 10초 대기 후 다시 확인
+
+                        status = sh(script: """
+                            curl --silent --location 'https://circleci.com/api/v2/pipeline/${env.PIPELINE_ID}/workflow' \
+                            --header 'Circle-Token: $CIRCLECI_TOKEN' | grep -o '"status" *: *"[^"]*"' | awk -F': ' '{print \$2}' | tr -d '"'
+                        """, returnStdout: true).trim()
+                        echo "CircleCI Pipeline Status: ${status}"
+                    }
+
+                    // 실패 또는 취소된 경우 빌드 중단
+                    if (status != "success") {
+                        error "CircleCI Pipeline Failed or Canceled! Status: ${status}"
+                    }
+
+                    echo "CircleCI Pipeline Completed Successfully!"
+                }
+            }
+        }
+
+
+        stage('Deploy Applications') {
+            steps {
+                script {
+                    sh """
+                        curl -sL ${GIT_DEPLOYMENT_YAML} | sed 's/{version}/${BUILD_ID}/g'| kubectl apply -n ${NAMESPACE} -f -
+                    """
+                }
+            }
+        }
+        stage('Check Deployment Status') {
+            steps {
+                script {
+                    sh """
+                        kubectl rollout status deployment/frontend-v${BUILD_ID} -n ${NAMESPACE}
+                        kubectl wait --for=condition=available deployment/frontend-v${BUILD_ID} --timeout=600s -n ${NAMESPACE}
+                    """
+                }
+            }
+        }
+        stage('Deploy Services & Ingress') {
+            steps {
+                script {
+                    sh """
+                        curl -sL ${GIT_FRONTEND_SERVICE_YAML} | sed 's/{version}/${BUILD_ID}/g'  | kubectl apply -n ${NAMESPACE} -f -
+                        curl -sL ${GIT_INGRESS_YAML} | sed 's/{version}/${BUILD_ID}/g' | kubectl apply -n ${NAMESPACE} -f -
+                    """
+                }
+            }
+        }
+    }
+}
