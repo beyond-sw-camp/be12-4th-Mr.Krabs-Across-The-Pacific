@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: db-cm
-  namespace: hgy
-data:
-  MARIADB_ROOT_PASSWORD: "{{ .Values.mariadb.rootpass }}"
-  MARIADB_DATABASE: "{{ .Values.mariadb.database }}"
