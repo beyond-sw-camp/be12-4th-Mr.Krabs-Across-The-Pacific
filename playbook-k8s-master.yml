@@ -10,7 +10,7 @@
         mkdir -p $HOME/.kube
     - name: copy k8s admin config
       shell: |
-        cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+        cp -f /etc/kubernetes/admin.conf $HOME/.kube/config
     - name: chown config
       shell: |
         chown $(id -u):$(id -g) $HOME/.kube/config
