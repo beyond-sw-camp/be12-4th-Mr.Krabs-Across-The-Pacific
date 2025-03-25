@@ -42,14 +42,14 @@
 
 ## 📝 CI/CD 설계 및 선택 배경
 
-### CircleCI를 통한 CI 자동화 및 빌드 최적화
+### CI (Continuous Integration): CircleCI를 활용한 이미지 빌드 및 푸시
 현재 팀의 컴퓨팅 자원 제약으로 인해 Jenkins가 빌드 및 Docker 이미지 푸시를 직접 처리하기에는 부담이 크다. 따라서 Jenkins는 CircleCI API를 통해 빌드와 Docker 이미지 푸시 작업을 위임하고, Jenkins의 BUILD_ID를 파라미터로 넘겨 CircleCI가 빌드 태그로 활용하도록 구성하였다.
 
 CircleCI는 GitHub 저장소에서 소스코드를 체크아웃하여 빌드를 수행하고, DockerHub로 이미지를 푸시한다. Jenkins는 CircleCI로부터 PIPELINE_ID를 전달받아 파이프라인 상태를 모니터링하며, 성공 시 CD 단계로 넘어간다.
 
 이 방식을 통해 Jenkins가 CI 단계의 부담에서 벗어나 배포에 집중할 수 있으며, 빌드와 배포 책임을 분리하여 시스템 안정성과 확장성을 높였다.
 
-### Jenkins를 통한 Kubernetes 배포 자동화
+### CD (Continuous Deployment): Jenkins를 통한 Kubernetes 배포 자동화
 ArgoCD 등 GitOps 기반 배포 도구는 학습 및 구축에 소요되는 시간이 크고, 현재 프로젝트 규모에서는 도입 효과가 제한적이라고 판단하였다. 따라서 Jenkins가 직접 Kubernetes 클러스터에 배포 명령을 수행하도록 하였다.
 
 Jenkins는 Kubernetes 내부에 배포되어 있으며, 보안성과 접근성을 강화한 환경에서 Blue-Green 또는 Canary 배포 전략을 적용하여 배포를 수행한다.
