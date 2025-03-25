@@ -60,7 +60,6 @@
         - kubelet
         - kubectl
         state: present
-        enabled: yes
         update_cache: yes
 
     - name: Configure kubelet to use cgroupfs
