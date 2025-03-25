@@ -1,6 +1,6 @@
 - name: k8s common setup
   become: true
-  hosts: allworker
+  hosts: all
   tasks:
     - name: Install Containerd
       apt:
@@ -9,65 +9,81 @@
         update_cache: yes
     - name: Configure sysctl for k8s network
       copy:
-      dest: /etc/sysctl.d/99-k8s-cri.conf
-      content: |
-		net.bridge.bridge-nf-call-iptables=1
-        net.bridge.bridge-nf-call-ip6tables=1
-        net.ipv4.ip_forward=1
+        dest: /etc/sysctl.d/99-k8s-cri.conf
+        content: |
+          net.bridge.bridge-nf-call-iptables=1
+          net.bridge.bridge-nf-call-ip6tables=1
+          net.ipv4.ip_forward=1
     - name: set sysctl
       shell: |
-	    sysctl --system
-		modprobe overlay; modprobe br_netfilter
-		echo -e overlay\\nbr_netfilter > /etc/modules-load.d/k8s.conf
-		update-alternatives --set-selections iptables manual /usr/sbin/iptables-legacy
-		swapoff -a
-      become: yes
-    - name: modify fstab
-      ansible.builtin.replace:
+        sysctl --system
+        modprobe overlay; modprobe br_netfilter
+        echo -e overlay\\nbr_netfilter > /etc/modules-load.d/k8s.conf
+    - name: Set iptables to legacy
+      command: update-alternatives --config iptables
+      args:
+        creates: /etc/alternatives/iptables
+
+    - name: Disable swap
+      command: swapoff -a
+
+    - name: Update fstab to disable swap on reboot
+      lineinfile:
         path: /etc/fstab
-        regexp: '(^[^#]*\b/swap.img\b)'
-        replace: '#\1'
-      backup: yes  # 기존 파일 백업
-    - name: modify grub
-      ansible.builtin.replace:
+        regexp: '^/swap.img'
+        state: absent
+
+    - name: Update GRUB configuration for cgroup
+      lineinfile:
         path: /etc/default/grub
-        regexp: '^GRUB_CMDLINE_LINUX=""'
-        replace: 'GRUB_CMDLINE_LINUX="systemd.unified_cgroup_hierarchy=0"'
-      backup: yes  # 기존 파일 백업    
-    - name: Get Keyring of k8s
+        regexp: '^GRUB_CMDLINE_LINUX='
+        line: 'GRUB_CMDLINE_LINUX="systemd.unified_cgroup_hierarchy=0"'
+      notify:
+        - Update grub
+
+    - name: Download the Kubernetes GPG key
       shell: |
-	    update-grub
-        curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-        echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+        curl -fsSLo /etc/apt/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+      args:
+        creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+    - name: Add Kubernetes Repo List
+      shell: |
+        echo "deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+      args:
+        creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+        
+    - name: Update apt package list
+      apt:
+        update_cache: yes
+
     - name: Install k8s
       apt:
+        name:
         - kubeadm
         - kubelet
         - kubectl
-      state: present
-      enabled: yes
-      update_cache: yes
-      
-    - name: Setting for k8s 
-      ansible.builtin.replace:
+        state: present
+        update_cache: yes
+
+    - name: Configure kubelet to use cgroupfs
+      lineinfile:
         path: /etc/default/kubelet
-        regexp: '^KUBELET_EXTRA_ARGS=""'
-        replace: 'KUBELET_EXTRA_ARGS="--cgroup-driver=cgroupfs"'
-      backup: yes  # 기존 파일 백업
-    - name: Setting for containerd
-      ansible.builtin.replace:
+        regexp: '^KUBELET_EXTRA_ARGS='
+        line: 'KUBELET_EXTRA_ARGS="--cgroup-driver=cgroupfs"'
+
+    - name: Modify containerd service file
+      lineinfile:
         path: /usr/lib/systemd/system/containerd.service
-        regexp: '^KillMode=none'
-        replace: 'KillMode=mixed'
-      backup: yes  # 기존 파일 백업
+        regexp: '^KillMode='
+        line: 'KillMode=mixed'
     - name: restart k8s and containerd
       shell: |
-	    systemctl daemon-reload
-		systemctl restart containerd.service
-		systemctl restart kubelet
+        systemctl daemon-reload
+        systemctl restart containerd.service
+        systemctl restart kubelet
     - name: Install iscsi for longhorn
       apt:
         update_cache: yes
         name: open-iscsi
         state: present
-        enabled: yes

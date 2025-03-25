@@ -1,0 +1,15 @@
+# mongodb-headless-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+  namespace: hgy
+spec:
+  selector:
+    app: mongodb
+  clusterIP: None  # Headless Service
+  ports:
+    - name: mongodb
+      protocol: TCP
+      port: 27017
+      targetPort: 27017

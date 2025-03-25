@@ -8,5 +8,5 @@ parameters:
   dataLocality: disabled
   fromBackup: ""
   fsType: ext4
-  numberOfReplicas: "1"
+  numberOfReplicas: "5"
   staleReplicaTimeout: "30"
