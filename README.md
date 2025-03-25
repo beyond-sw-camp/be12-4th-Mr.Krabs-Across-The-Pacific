@@ -171,7 +171,7 @@ Jenkisn는 CircleCI가 success/fail 여부를 보낼 때까지 기다린다.
 
 ![succes](./images/4.success_deploy.gif)      
 4. CircleCI가 파이프라인 작업을 완료하면 Jenkins가 성공여부를 확인한다.      
-성공시 K8S에 배포를 명령, 실패시 작업을 중단한다.
+성공시 K8s에 배포를 명령, 실패시 작업을 중단한다.
 
 ![deploy](./images/5.deploy_complete.gif)      
-5. K8S는 push된 Docker Image를 이용하여 Container를 무중단 배포한다.
+5. K8s는 push된 Docker Image를 이용하여 Container를 무중단 배포한다.
