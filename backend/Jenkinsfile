@@ -2,19 +2,18 @@ pipeline {
 	agent any
 
     environment {
-        NAMESPACE = 'kgj'
-        GIT_DEPLOYMENT_YAML = 'https://raw.githubusercontent.com/beyond-sw-camp/be12-3rd-Mr.Krabs-Across-The-Pacific/refs/heads/feat/cicd/jenkins/k8s/backend-deployment.yml'
-        GIT_SERVICE_YAML = 'https://raw.githubusercontent.com/beyond-sw-camp/be12-3rd-Mr.Krabs-Across-The-Pacific/refs/heads/feat/cicd/jenkins/k8s/backend-service.yml'        CIRCLECI_PROJECT_SLUG = ''
-        CIRCLECI_TOKEN = ''
-        CIRCLECI_DEFINITION_ID = ''
-        CIRCLECI_PROJECT_SLUG = ''
+        NAMESPACE = 'atp'
+        GIT_DEPLOYMENT_YAML = 'https://raw.githubusercontent.com/beyond-sw-camp/be12-4th-Mr.Krabs-Across-The-Pacific/refs/heads/develop/backend/back-deploy.yaml'
+        GIT_SERVICE_YAML = 'https://raw.githubusercontent.com/beyond-sw-camp/be12-4th-Mr.Krabs-Across-The-Pacific/refs/heads/develop/backend/back-svc.yaml'
+        CIRCLECI_PROJECT_SLUG = 'circleci/EAQqLFJfLAc1BW9jMD56YP/LWRnp5gwohJsMWpZSfygty'
+        CIRCLECI_DEFINITION_ID = '96d0da17-0d80-4527-861c-95c3bfccce0a'
+        CIRCLECI_TOKEN = credentials('CIRCLECI_TOKEN')
     }
-
     stages {
-		stage('Trigger CircleCI Pipeline') {
+        stage('Trigger CircleCI Pipeline') {
             steps {
                 script {
-                    echo "Starting CircleCI Pipeline..."
+                    echo "Starting CircleCI Pipeline...."
 
                     // CircleCI 파이프라인 실행 및 ID 가져오기
                     def pipeline_id = sh(script: """
@@ -24,15 +23,15 @@ pipeline {
                         --data '{
                             "definition_id": "$CIRCLECI_DEFINITION_ID",
                             "config": {
-                                "branch": "circleci-project-setup"
+                                "branch": "develop"
                             },
                             "checkout": {
-                                "branch": "circleci-project-setup"
+                                "branch": "develop"
                             },
                             "parameters": {
                                 "tag": "$BUILD_ID"
                             }
-                        }' | jq -r '.id'
+                        }'  | grep -o '"id":"[^"]*"' | awk -F':' '{print \$2}' | tr -d '"'
                     """, returnStdout: true).trim()
 
                     echo "Triggered CircleCI Pipeline ID: ${pipeline_id}"
@@ -51,9 +50,8 @@ pipeline {
 
                         status = sh(script: """
                             curl --silent --location 'https://circleci.com/api/v2/pipeline/${env.PIPELINE_ID}/workflow' \
-                            --header 'Circle-Token: $CIRCLECI_TOKEN' | jq -r '.items[0].status'
+                            --header 'Circle-Token: $CIRCLECI_TOKEN' | grep -o '"status" *: *"[^"]*"' | awk -F': ' '{print \$2}' | tr -d '"'
                         """, returnStdout: true).trim()
-
                         echo "CircleCI Pipeline Status: ${status}"
                     }
 
@@ -99,7 +97,7 @@ pipeline {
                                     sshTransfer(
                                         execCommand: """
                                             kubectl rollout status deployment/backend-${env.BORG} -n ${NAMESPACE}
-                                            kubectl wait --for=condition=available deployment/backend-${env.BORG} --timeout=120s -n ${NAMESPACE}
+                                            kubectl wait --for=condition=available deployment/backend-${env.BORG} --timeout=600s -n ${NAMESPACE}
                                         """
                                     ),
                                     sshTransfer(
