@@ -54,11 +54,11 @@ workflows:
           filters:
             branches:
               only:
-                - circleci-project-setup
+                - develop
       - docker-build-and-push:
           requires:
             - gradle-build
           filters:
             branches:
               only:
-                - circleci-project-setup
+                - develop
