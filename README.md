@@ -170,4 +170,4 @@ Jenkisn는 CircleCI가 success/fail 여부를 보낼 때까지 기다린다.
 성공시 K8S에 배포를 명령, 실패시 작업을 중단한다.
 
 ![deploy](./images/5.deploy_complete.gif)      
-5.K8S는 push된 Docker Image를 이용하여 Container배포한다.
+5. K8S는 push된 Docker Image를 이용하여 Container배포한다.
