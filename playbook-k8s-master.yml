@@ -5,18 +5,41 @@
     - name: Init k8s
       shell: |
         kubeadm init --pod-network-cidr=100.100.100.0/24 --cri-socket=unix:///run/containerd/containerd.sock
-    - name: Generate Token and save join instruction inside Env Variable
-      shell: |
-        export JOIN=$(kubeadm token create --print-join-command)
-    - name: shoot join to worker1
-      shell: |
-        ssh test@worker1 $JOIN
-    - name: shoot join to worker1
-      shell: |
-        ssh test@worker2 $JOIN
-    - name: shoot join to worker1
-      shell: |
-        ssh test@worker3 $JOIN
-    - name: shoot join to worker1
-      shell: |
-        ssh test@worker4 $JOIN
+    - name: Generate Token and save join instruction inside variable
+      command: kubeadm token create --print-join-command
+      register: join_command
+    - name: Copy join command to local file
+      local_action: copy content="{{ join_command.stdout_lines[0] }}" dest="./join-command"
+    - debug: msg="{{ join_command }}"
+- name: Joining Job Step 2 on Worker1 node
+  hosts: worker1
+  become: true
+  tasks:
+    - name: Copy the join command to server location
+      copy: src=join-command dest=/tmp/join-command.sh mode=0777
+    - name: Join the node to cluster
+      command: sh /tmp/join-command.sh
+- name: Joining Job Step 2 on Worker2 node
+  hosts: worker2
+  become: true
+  tasks:
+    - name: Copy the join command to server location
+      copy: src=join-command dest=/tmp/join-command.sh mode=0777
+    - name: Join the node to cluster
+      command: sh /tmp/join-command.sh
+- name: Joining Job Step 2 on Worker3 node
+  hosts: worker3
+  become: true
+  tasks:
+    - name: Copy the join command to server location
+      copy: src=join-command dest=/tmp/join-command.sh mode=0777
+    - name: Join the node to cluster
+      command: sh /tmp/join-command.sh
+- name: Joining Job Step 2 on Worker4 node
+  hosts: worker4
+  become: true
+  tasks:
+    - name: Copy the join command to server location
+      copy: src=join-command dest=/tmp/join-command.sh mode=0777
+    - name: Join the node to cluster
+      command: sh /tmp/join-command.sh
