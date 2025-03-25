@@ -5,6 +5,15 @@
     - name: Init k8s
       shell: |
         kubeadm init --pod-network-cidr=100.100.100.0/24 --cri-socket=unix:///run/containerd/containerd.sock
+    - name: make k8s config folder
+      shell: |
+        mkdir -p $HOME/.kube
+    - name: copy k8s admin config
+      shell: |
+        cp -f /etc/kubernetes/admin.conf $HOME/.kube/config
+    - name: chown config
+      shell: |
+        chown $(id -u):$(id -g) $HOME/.kube/config
     - name: Generate Token and save join instruction inside variable
       command: kubeadm token create --print-join-command
       register: join_command
@@ -13,10 +22,14 @@
     - debug: msg="{{ join_command }}"
     - name: get Calico settings example
       command: wget https://raw.githubusercontent.com/projectcalico/calico/master/manifests/calico.yaml
+    - name: apply calico setting
+      command: kubectl apply -f ./calico.yaml
     - name: get Dashboard yaml example
       command: wget https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
     - name: get Longhorn setting file
       command: wget https://raw.githubusercontent.com/longhorn/longhorn/v1.7.1/deploy/longhorn.yaml
+    - name: apply longhorn setting
+      command: kubectl apply -f ./longhorn.yaml
 
 - name: Joining Job Step 2 on Worker1 node
   hosts: worker1
