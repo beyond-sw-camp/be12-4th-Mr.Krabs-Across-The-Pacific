@@ -4,7 +4,10 @@
   tasks:
     - name: Install Containerd
       apt:
-        name: containerd
+        name:
+          - containerd
+          - apt-transport-https
+          - ca-certificates
         state: present
         update_cache: yes
     - name: Configure sysctl for k8s network
@@ -38,21 +41,19 @@
         path: /etc/default/grub
         regexp: '^GRUB_CMDLINE_LINUX='
         line: 'GRUB_CMDLINE_LINUX="systemd.unified_cgroup_hierarchy=0"'
-      notify:
-        - Update grub
+    - name: Update GRUB
+      command: update-grub
 
     - name: Download the Kubernetes GPG key
-      shell: |
-        curl -fsSLo /etc/apt/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
-      args:
-        creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+      get_url:
+        url: https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key
+        dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
+        mode: "0644"
 
     - name: Add Kubernetes Repo List
-      shell: |
-        echo "deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
-      args:
-        creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-        
+      apt_repository:
+        repo: deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /
+        state: present
     - name: Update apt package list
       apt:
         update_cache: yes
