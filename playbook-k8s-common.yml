@@ -1,6 +1,6 @@
 - name: k8s common setup
   become: true
-  hosts: allworker
+  hosts: all
   tasks:
     - name: Install Containerd
       apt:
